@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kernelforge"
+version = "0.1.0"
+description = "A tiny ML compiler: tensor graph -> fusion -> tiled loop nests -> WGSL, Metal and C kernels, with an autotuner."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "the kernelforge authors" }]
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+keywords = ["compiler", "gpu", "webgpu", "wgsl", "metal", "tvm", "triton", "autotuning", "quantization"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Compilers",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ziglang>=0.13"]
+figures = ["matplotlib>=3.8"]
+
+[project.urls]
+Homepage = "https://github.com/coopersimpson101-debug/kernelforge"
+Source = "https://github.com/coopersimpson101-debug/kernelforge"
+Issues = "https://github.com/coopersimpson101-debug/kernelforge/issues"
+Changelog = "https://github.com/coopersimpson101-debug/kernelforge/blob/main/CHANGELOG.md"
+
+[project.scripts]
+kernelforge = "kernelforge.__main__:main"
+
+[tool.setuptools]
+packages = ["kernelforge", "kernelforge.codegen"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

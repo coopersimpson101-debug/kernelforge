@@ -1,0 +1,13 @@
+name: Feature request
+description: A new op, pass, schedule knob or backend
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations: { required: true }
+  - type: textarea
+    id: why
+    attributes:
+      label: Why / which workload?

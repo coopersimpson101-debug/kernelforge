@@ -1,0 +1,53 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  python:
+    name: compiler + C oracle + MSL shim (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install numpy pytest
+      - name: "Tests (WebGPU tests skip: hosted runners have no GPU)"
+        run: python -m pytest -q
+      - name: CLI smoke test
+        run: |
+          python -m kernelforge explain ffn_q4_0 > /dev/null
+          python -m kernelforge compile jacobi --target m1 > /dev/null
+          python -m kernelforge compile softmax --target c > /dev/null
+
+  harness:
+    name: WebGPU harness typecheck (node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "24" }
+      - run: npm ci --ignore-scripts
+      - run: npx tsc --noEmit -p tsconfig.json
+
+  macos:
+    name: Metal compile (xcrun metal) + Metal GPU run (macos-latest)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install numpy pytest
+      - name: Metal toolchain
+        run: xcrun -sdk macosx metal --version || xcodebuild -downloadComponent MetalToolchain
+      - name: Build the Metal harness
+        run: mkdir -p build && clang -fobjc-arc -O2 -framework Metal -framework Foundation metal/kf_metal_run.m -o build/kf_metal_run
+      - name: Generated MSL compiles with Apple's compiler (+ every other test)
+        run: python -m pytest -q -k "not runs_on_metal_gpu"
+      - name: Benchmark kernels (tuned schedules) compile with xcrun metal
+        run: python scripts/export_kernels.py -o build/kernels && for f in build/kernels/msl/*.metal; do xcrun -sdk macosx metal -c "$f" -o "${f%.metal}.air"; done
+      - name: Generated MSL runs on the runner's Metal GPU vs NumPy (hosted runners may not expose a usable GPU)
+        continue-on-error: true
+        run: python -m pytest -v -k runs_on_metal_gpu

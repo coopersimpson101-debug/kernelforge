@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use kernelforge, please cite it as below."
+title: "kernelforge: a tiny ML compiler that writes WGSL, Metal and C kernels"
+authors:
+  - name: "the kernelforge authors"
+version: 0.1.0
+date-released: 2026-11-26
+license: MIT
+repository-code: "https://github.com/coopersimpson101-debug/kernelforge"
+keywords: [compiler, gpu, webgpu, metal, autotuning, quantization]

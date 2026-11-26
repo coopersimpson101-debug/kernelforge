@@ -1,0 +1,23 @@
+{
+  "name": "kernelforge-harness",
+  "version": "0.1.0",
+  "description": "WebGPU (Dawn) execution harness for kernelforge's generated WGSL kernels.",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "repository": { "type": "git", "url": "https://github.com/coopersimpson101-debug/kernelforge" },
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "probe": "node harness/probe.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.11",
+    "@webgpu/types": "^0.1.74",
+    "typescript": "^7.0.2"
+  },
+  "optionalDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "webgpu": "^0.6.2"
+  }
+}

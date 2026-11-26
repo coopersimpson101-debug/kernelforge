@@ -1,0 +1,55 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build a release for"
+        required: true
+permissions:
+  contents: write
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install numpy pytest build
+      - run: python -m pytest -q
+      - run: python -m build --outdir out
+      - name: Generated benchmark kernels (WGSL / MSL / C, tuned schedules)
+        run: |
+          python scripts/export_kernels.py -o kernelforge-kernels
+          zip -qr out/kernelforge-kernels.zip kernelforge-kernels
+      - uses: actions/upload-artifact@v4
+        with: { name: python, path: out/* }
+  metal:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - run: mkdir -p out && clang -fobjc-arc -O2 -framework Metal -framework Foundation metal/kf_metal_run.m -o out/kf_metal_run-macos-arm64
+      - uses: actions/upload-artifact@v4
+        with: { name: metal, path: out/* }
+  publish:
+    needs: [python, metal]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          body_path: .github/release/${{ github.event.inputs.tag || github.ref_name }}.md
+          fail_on_unmatched_files: true
+          files: out/*

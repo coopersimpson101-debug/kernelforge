@@ -1,0 +1,23 @@
+name: Bug report
+description: A kernel computes the wrong answer, fails to compile, or the tooling breaks
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Graph (or zoo name), target, knobs, and the error or wrong output.
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      render: shell
+      placeholder: "python -m kernelforge run softmax --knobs '{\"wg\": 256}'"
+    validations: { required: true }
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: OS, GPU, `node harness/probe.ts` output, Python version
+    validations: { required: true }

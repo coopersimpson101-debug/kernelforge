@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+node_modules/
+*.dll
+*.so
+*.dylib
+*.pdb
+*.air
+*.metallib
+bench/results/*.tmp
+.venv/

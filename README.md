@@ -42,21 +42,21 @@ WGSL on the right. Regenerate both with <code>python docs/make_figures.py</code>
 - **Fusion that matters:** tinyinfer's SwiGLU (`silu(Wg x) * (Wu x)`, 3 dispatches) becomes 2 kernels with the activation as a matvec epilogue: **8.8x / 11.4x** faster end to end for Q4_0 at 0.5B / 1.5B shapes.
 - **flipgpu's pressure solver, regenerated from a 3-line graph:** Jacobi output **bit-identical** to flipgpu's own WGSL (byte-for-byte test, 3 schedules) and, after exhaustive schedule search, **1.20-1.22x** faster Jacobi steps and **1.04-1.10x** faster red-black SOR iterations.
 - **GEMM from the same machinery:** shared + register tiling found by the tuner reaches **2.54 TFLOP/s** on a 1024³ f32 GEMM (39 % of the card's 6.45 TFLOP/s peak), 25x over the untuned schedule.
-- **Checked, not trusted:** every generated kernel is compared with NumPy on random inputs: 17 zoo programs x (C oracle, default WGSL, 3 random schedules from each knob space, WebGPU-portable limits), plus the hand-written baselines; the tuner also rejects any candidate whose output is wrong (none were, over 1,186 timed schedules).
+- **Checked, not trusted:** every generated kernel is compared with NumPy on random inputs: 18 zoo programs x (C oracle, default WGSL, 3 random schedules from each knob space, WebGPU-portable limits), plus the hand-written baselines; the tuner also rejects any candidate whose output is wrong (none were, over 1,186 timed schedules).
 <!-- highlights:end -->
 
 ## Status
 
 | | what | where it was checked |
 |---|---|---|
-| ✅ | Full test-suite: **105 passed**, 34 skipped (macOS-only Metal tests), `python -m pytest -q` | Windows 10 + RTX 2060 here |
+| ✅ | Full test-suite: **109 passed**, 36 skipped (macOS-only Metal tests), `python -m pytest -q` | Windows 10 + RTX 2060 here |
 | ✅ | Graph IR, fusion, compute/schedule, all passes; every zoo program vs NumPy through the **C oracle** | here (zig cc); Linux CI (gcc) |
 | ✅ | Every zoo program as **WGSL on the RTX 2060**: default schedule, 3 random tuned schedules each, WebGPU-portable limits | here, Dawn D3D12 |
 | ✅ | Hand-written baselines (tinyinfer port, flipgpu extract) vs NumPy; generated Jacobi == flipgpu byte for byte | here, RTX 2060 |
 | ✅ | Benchmarks + autotuning on the RTX 2060 (table below) | here, see machine notes |
 | ✅ | Generated **MSL** type-checks as C++ against a Metal shim | here (zig c++); Linux CI (clang++) |
-| ⏳ | Generated MSL compiles with Apple's `xcrun metal` | CI job `macos` on macos-latest (written, not yet observed: needs the first push) |
-| ⏳ | Generated MSL runs on a Metal GPU vs NumPy | CI `macos` (hosted runners may not expose a GPU; step is allowed to fail) |
+| ✅ | Generated MSL (every zoo program + the 26 tuned benchmark kernels) compiles with Apple's `xcrun metal` | GitHub CI `macos` job, macos-latest Apple-silicon runner, 2026-11-26 |
+| ⏳ | Generated MSL runs on a Metal GPU vs NumPy: 16/17 zoo programs passed on the first CI run (2026-11-26); `mlp` returned NaN (Metal's fast-math `tanh` overflows for \|x\| > ~44, fixed by clamping its argument, regression graph `gelu_wide` added). The step is now blocking; re-run pending on the next push | GitHub CI `macos` job, macos-latest Apple-silicon runner |
 | ⏳ | Any number on an **Apple M1** | needs the owner's Mac: `bench/run_bench_metal.py` |
 
 ## Quickstart
@@ -328,8 +328,8 @@ python bench/run_bench_metal.py                      # tinyinfer's original Meta
 (see the note under the table). For publication-quality numbers re-run on an idle GPU:
 `python bench/run_bench.py && python bench/costmodel_sweep.py && python docs/make_figures.py`.
 
-**CI.** The `macos` job (Apple compiler + Metal run) has been written but has not run yet; check
-its first result after the push.
+**CI.** The `macos` job's Metal GPU step is now blocking (it skips only if `kf_metal_run --probe`
+finds no Metal device). Check that the `tanh` fix turns `mlp` green on the next run.
 
 ## Roadmap
 

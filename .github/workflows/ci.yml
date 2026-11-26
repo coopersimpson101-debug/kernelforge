@@ -48,6 +48,7 @@ jobs:
         run: python -m pytest -q -k "not runs_on_metal_gpu"
       - name: Benchmark kernels (tuned schedules) compile with xcrun metal
         run: python scripts/export_kernels.py -o build/kernels && for f in build/kernels/msl/*.metal; do xcrun -sdk macosx metal -c "$f" -o "${f%.metal}.air"; done
-      - name: Generated MSL runs on the runner's Metal GPU vs NumPy (hosted runners may not expose a usable GPU)
-        continue-on-error: true
-        run: python -m pytest -v -k runs_on_metal_gpu
+      - name: Metal device
+        run: build/kf_metal_run --probe || test $? -eq 3
+      - name: Generated MSL runs on the runner's Metal GPU vs NumPy (skips only if there is no Metal device)
+        run: python -m pytest -v -rs -k runs_on_metal_gpu

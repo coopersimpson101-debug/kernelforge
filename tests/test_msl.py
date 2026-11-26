@@ -76,10 +76,29 @@ def test_msl_xcrun_compile(name):
         assert r.returncode == 0, r.stderr[-3000:]
 
 
+_probe_cache: list = []
+
+
+def _metal_device():
+    """Device name, or None when the machine has no Metal device (checked explicitly with
+    `kf_metal_run --probe`, exit code 3). Any other probe failure is an error, not a skip."""
+    if not _probe_cache:
+        r = subprocess.run([str(METAL_RUNNER), "--probe"], capture_output=True, text=True, timeout=60)
+        if r.returncode == 3:
+            _probe_cache.append(None)
+        else:
+            assert r.returncode == 0, f"Metal probe failed: {r.stderr}"
+            import json
+            _probe_cache.append(json.loads(r.stdout)["device"])
+    return _probe_cache[0]
+
+
 @pytest.mark.parametrize("name", NAMES)
 def test_msl_runs_on_metal_gpu(name):
     if not METAL_RUNNER.exists():
         pytest.skip("build/kf_metal_run not built (macOS only: see metal/kf_metal_run.m)")
+    if _metal_device() is None:
+        pytest.skip("no Metal device on this machine (kf_metal_run --probe)")
     g = zoo.SMALL[name]()
     f = random_feeds(g, 2)
     vals = evaluate(g, f)

@@ -22,6 +22,17 @@ def flit(v: float) -> str:
     return r + ".0"
 
 
+TANH_LIMIT = "10.0"
+
+
+def tanh_clamp(arg: str, ty: str) -> str:
+    """GPU tanh is commonly lowered as (e^2x - 1) / (e^2x + 1), which is inf/inf = NaN once e^2x
+    overflows (|x| > ~44; Metal's default fast-math tanh does this). tanh(+-10) already rounds to
+    +-1.0f in f32 (|1 - tanh(10)| = 4e-9 < half an ulp), so clamping the argument is exact."""
+    lo, hi = (f"-{TANH_LIMIT}", TANH_LIMIT) if "<" not in ty else (f"{ty}(-{TANH_LIMIT})", f"{ty}({TANH_LIMIT})")
+    return f"clamp({arg}, {lo}, {hi})"
+
+
 _FN = {"exp": "exp", "sqrt": "sqrt", "rsqrt": "inverseSqrt", "tanh": "tanh", "abs": "abs", "dot": "dot",
        "subgroup_add": "subgroupAdd", "subgroup_max": "subgroupMax"}
 
@@ -51,6 +62,8 @@ class WGSLGen(TextGen):
                 return f"dot({a[0]}, vec{n}<f32>(1.0))"
             if x.fn == "sext8":
                 return f"(bitcast<i32>({a[0]} << 24u) >> 24u)"
+            if x.fn == "tanh":
+                return f"tanh({tanh_clamp(a[0], wtype(x.dtype))})"
             if x.fn == "unpack_lo_half":
                 return f"unpack2x16float({a[0]}).x"
             return f"{_FN[x.fn]}({', '.join(a)})"

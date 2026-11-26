@@ -43,6 +43,9 @@ inline float exp(float x) { return __builtin_expf(x); }
 inline float4 exp(float4 v) { return float4(__builtin_expf(v.x), __builtin_expf(v.y), __builtin_expf(v.z), __builtin_expf(v.w)); }
 inline float sqrt(float x) { return __builtin_sqrtf(x); }
 inline float tanh(float x) { return __builtin_tanhf(x); }
+inline float clamp(float x, float lo, float hi) { return x < lo ? lo : (x > hi ? hi : x); }
+inline float4 clamp(float4 v, float4 lo, float4 hi) { return float4(clamp(v.x, lo.x, hi.x), clamp(v.y, lo.y, hi.y), clamp(v.z, lo.z, hi.z), clamp(v.w, lo.w, hi.w)); }
+inline float4 tanh(float4 v) { return float4(__builtin_tanhf(v.x), __builtin_tanhf(v.y), __builtin_tanhf(v.z), __builtin_tanhf(v.w)); }
 inline float fabs(float x) { return __builtin_fabsf(x); }
 inline float min(float a, float b) { return a < b ? a : b; }
 inline float max(float a, float b) { return a > b ? a : b; }

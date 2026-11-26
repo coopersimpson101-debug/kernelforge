@@ -52,3 +52,12 @@ def test_default_vs_tuned_differ():
     b = compile_graph(g, T, {"matvec": {"R": 2, "T": 32, "U": 2, "V": 4, "xlane": "subgroup",
                                         "stage_x": 1}}).kernels[0].source
     assert a != b and "subgroupAdd" in b
+
+
+def test_gpu_tanh_argument_is_clamped():
+    """Metal's fast-math tanh overflows to NaN for |x| > ~44 (seen on the macOS CI GPU for the mlp
+    graph); both GPU backends clamp the argument to +-10, which is exact in f32."""
+    g = zoo.gelu_wide()
+    for t in (T, M1_MSL):
+        src = compile_graph(g, t).source()
+        assert "tanh(clamp(" in src and "tanh((" not in src

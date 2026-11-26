@@ -13,6 +13,15 @@ def elementwise(m=48, n=96):
     return g
 
 
+def gelu_wide(m=16, n=128):
+    """Large activations (|x| up to ~200): tanh's argument reaches ~1e6, where a fast-math
+    tanh = (e^2x - 1)/(e^2x + 1) gives NaN. Regression graph for the Metal mlp failure."""
+    g = Graph("gelu_wide")
+    x = g.input("x", (m, n))
+    g.output(g.gelu(x * 60.0) + g.tanh(x * 60.0))
+    return g
+
+
 def rmsnorm(rows=8, n=896):
     g = Graph("rmsnorm")
     x = g.input("x", (rows, n))
@@ -117,7 +126,7 @@ def chain_mlp(m=32, d=64, h=128):
 
 
 SMALL = {
-    "elementwise": elementwise, "rmsnorm": lambda: rmsnorm(8, 96), "softmax": lambda: softmax(6, 100),
+    "elementwise": elementwise, "gelu_wide": gelu_wide, "rmsnorm": lambda: rmsnorm(8, 96), "softmax": lambda: softmax(6, 100),
     "rowsum": rowsum, "matvec_f32": lambda: matvec(200, 512, "f32"),
     "matvec_f16": lambda: matvec(72, 256, "f16"), "matvec_q8_0": lambda: matvec(200, 512, "q8_0"),
     "matvec_q4_0": lambda: matvec(200, 512, "q4_0"), "ffn_q4_0": lambda: ffn_gate(96, 256, "q4_0"),

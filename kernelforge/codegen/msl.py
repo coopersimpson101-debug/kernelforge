@@ -52,6 +52,10 @@ class MSLGen(TextGen):
                 return f"dot({a[0]}, float{n}(1.0f))"
             if x.fn == "sext8":
                 return f"int(char({a[0]}))"
+            if x.fn == "tanh":  # see codegen/wgsl.py: tanh_clamp (Metal fast-math tanh -> NaN for |x| > ~44)
+                t = mtype(x.dtype)
+                lo, hi = ("-10.0f", "10.0f") if lanes(x.dtype) == 1 else (f"{t}(-10.0f)", f"{t}(10.0f)")
+                return f"tanh(clamp({a[0]}, {lo}, {hi}))"
             return f"{_FN[x.fn]}({', '.join(a)})"
         name = ident(x.buf.name) if hasattr(x, "buf") else ""
         if isinstance(x, Load):

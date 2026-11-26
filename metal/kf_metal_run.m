@@ -3,6 +3,7 @@
 //
 //   clang -fobjc-arc -O2 -framework Metal -framework Foundation metal/kf_metal_run.m -o build/kf_metal_run
 //   build/kf_metal_run job.json            (prints a JSON result to stdout)
+//   build/kf_metal_run --probe             (exit 3 if there is no Metal device)
 //
 // MSL is compiled at run time with newLibraryWithSource (no offline toolchain needed). Timing: each
 // run is one command buffer with R repetitions of the steps; GPUEndTime - GPUStartTime per run / R.
@@ -16,7 +17,17 @@ static void fail(NSString *msg) {
 
 int main(int argc, const char **argv) {
   @autoreleasepool {
-    if (argc < 2) fail(@"usage: kf_metal_run <job.json>");
+    if (argc < 2) fail(@"usage: kf_metal_run <job.json> | --probe");
+    if (strcmp(argv[1], "--probe") == 0) {
+      // exit 3 = no Metal device at all (the only case the tests skip); 0 = device present
+      id<MTLDevice> d = MTLCreateSystemDefaultDevice();
+      if (!d) {
+        printf("{\"device\": null}\n");
+        return 3;
+      }
+      printf("{\"device\": \"%s\"}\n", d.name.UTF8String);
+      return 0;
+    }
     NSString *jobPath = [NSString stringWithUTF8String:argv[1]];
     NSString *dir = [jobPath stringByDeletingLastPathComponent];
     NSData *jd = [NSData dataWithContentsOfFile:jobPath];

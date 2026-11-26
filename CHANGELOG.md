@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-11-26
+
+### Fixed
+- Generated MSL returned NaN for `mlp` on a real Metal GPU: Metal's fast-math `tanh` behaves like
+  (e^2x - 1)/(e^2x + 1) and overflows to inf/inf for |x| > ~44, which the fused GELU reaches. Both GPU
+  backends now emit `tanh(clamp(x, -10, 10))` (tanh(10) is already 1.0 in float32). Regression graph
+  `gelu_wide` (|x| up to ~200) runs on every backend.
+
+### Changed
+- The Metal GPU step in CI is blocking; it skips only when `kf_metal_run --probe` reports no Metal
+  device. 18/18 zoo programs match NumPy on the macos-latest runner's GPU.
+
 ## [0.1.0] - 2026-11-26
 
 ### Added

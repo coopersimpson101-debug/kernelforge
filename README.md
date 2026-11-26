@@ -56,7 +56,7 @@ WGSL on the right. Regenerate both with <code>python docs/make_figures.py</code>
 | ✅ | Benchmarks + autotuning on the RTX 2060 (table below) | here, see machine notes |
 | ✅ | Generated **MSL** type-checks as C++ against a Metal shim | here (zig c++); Linux CI (clang++) |
 | ✅ | Generated MSL (every zoo program + the 26 tuned benchmark kernels) compiles with Apple's `xcrun metal` | GitHub CI `macos` job, macos-latest Apple-silicon runner, 2026-11-26 |
-| ⏳ | Generated MSL runs on a Metal GPU vs NumPy: 16/17 zoo programs passed on the first CI run (2026-11-26); `mlp` returned NaN (Metal's fast-math `tanh` overflows for \|x\| > ~44, fixed by clamping its argument, regression graph `gelu_wide` added). The step is now blocking; re-run pending on the next push | GitHub CI `macos` job, macos-latest Apple-silicon runner |
+| ✅ | Generated MSL runs on a Metal GPU and matches NumPy: **18/18** zoo programs, including `gelu_wide`. The first CI run caught `mlp` returning NaN (Metal's fast-math `tanh` overflows for \|x\| > ~44), fixed in v0.1.1 by clamping its argument | GitHub CI `macos` job (blocking), macos-latest Apple-silicon runner, 2026-11-26 |
 | ⏳ | Any number on an **Apple M1** | needs the owner's Mac: `bench/run_bench_metal.py` |
 
 ## Quickstart
@@ -328,8 +328,8 @@ python bench/run_bench_metal.py                      # tinyinfer's original Meta
 (see the note under the table). For publication-quality numbers re-run on an idle GPU:
 `python bench/run_bench.py && python bench/costmodel_sweep.py && python docs/make_figures.py`.
 
-**CI.** The `macos` job's Metal GPU step is now blocking (it skips only if `kf_metal_run --probe`
-finds no Metal device). Check that the `tanh` fix turns `mlp` green on the next run.
+**CI.** The `macos` job's Metal GPU step is blocking (it skips only if `kf_metal_run --probe`
+finds no Metal device); all 18 zoo programs match NumPy on the runner's GPU.
 
 ## Roadmap
 

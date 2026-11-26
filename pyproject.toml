@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kernelforge"
-version = "0.1.0"
+version = "0.1.1"
 description = "A tiny ML compiler: tensor graph -> fusion -> tiled loop nests -> WGSL, Metal and C kernels, with an autotuner."
 readme = "README.md"
 license = { text = "MIT" }

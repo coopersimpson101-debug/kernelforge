@@ -13,10 +13,10 @@ jobs:
   python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12" }
       - run: pip install numpy pytest build
       - run: python -m pytest -q
@@ -25,29 +25,29 @@ jobs:
         run: |
           python scripts/export_kernels.py -o kernelforge-kernels
           zip -qr out/kernelforge-kernels.zip kernelforge-kernels
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: python, path: out/* }
   metal:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
       - run: mkdir -p out && clang -fobjc-arc -O2 -framework Metal -framework Foundation metal/kf_metal_run.m -o out/kf_metal_run-macos-arm64
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: metal, path: out/* }
   publish:
     needs: [python, metal]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: out
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           body_path: .github/release/${{ github.event.inputs.tag || github.ref_name }}.md
